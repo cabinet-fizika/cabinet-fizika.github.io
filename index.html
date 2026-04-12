@@ -19,7 +19,7 @@
       width: 100%;
       height: 100%;
       z-index: 0;                /* позади всего контента */
-      pointer-events: none;      /* чтобы клики проходили сквозь частицы */
+      pointer-events: auto;      /* чтобы клики проходили сквозь частицы */
       background: transparent;   /* градиент body будет виден */
     }
 
@@ -54,6 +54,7 @@
       border: 1px solid rgba(255, 215, 255, 0.3);
       text-align: center;
       transition: box-shadow 0.2s;
+	  pointer-events: auto;
     }
 
     .header h1 {
@@ -357,7 +358,7 @@
     const particlesConfig = {
       "particles": {
         "number": {
-          "value": 70,                // не слишком густо, но заметно
+          "value": 100,                // не слишком густо, но заметно
           "density": {
             "enable": true,
             "value_area": 900
@@ -419,11 +420,11 @@
         "detect_on": "canvas",
         "events": {
           "onhover": {
-            "enable": false,           // отключаем, чтобы не мешать наведению на спойлеры
-            "mode": "repulse"
+            "enable": true,           // включаем реакцию на мышь
+            "mode": "grab"            // линии тянутся к курсору (мягкий эффект)
           },
           "onclick": {
-            "enable": false,
+            "enable": false,          // оставляем выключенным, чтобы не мешать кликам по спойлерам
             "mode": "push"
           },
           "resize": true
@@ -432,7 +433,7 @@
           "grab": {
             "distance": 200,
             "line_linked": {
-              "opacity": 0.5
+              "opacity": 0.6          // линии становятся ярче при наведении
             }
           },
           "bubble": {
@@ -477,7 +478,7 @@
       canvas.style.left = '0';
       canvas.style.width = '100%';
       canvas.style.height = '100%';
-      canvas.style.pointerEvents = 'none';
+      canvas.style.pointerEvents = 'auto';
     }
   })();
 </script>
@@ -493,7 +494,7 @@
     width: 100% !important;
     height: 100% !important;
     z-index: 0;
-    pointer-events: none;
+    pointer-events: auto;
   }
   /* Чтобы body не перекрывал canvas по z-index (уже задано) */
   body {
