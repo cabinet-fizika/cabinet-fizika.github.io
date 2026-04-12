@@ -10,6 +10,18 @@
       padding: 0;
       box-sizing: border-box;
     }
+	
+	/* Контейнер для частиц — фона в виде паутинки атомов */
+    #particles-js {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;                /* позади всего контента */
+      pointer-events: none;      /* чтобы клики проходили сквозь частицы */
+      background: transparent;   /* градиент body будет виден */
+    }
 
     body {
       font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
@@ -19,12 +31,16 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+	  position: relative;
+      z-index: 1;               /* чтобы body был над #particles-js, но контент выше */
     }
 
     .wrapper {
       max-width: 900px;
       width: 100%;
       margin: 0 auto;
+	  position: relative;
+      z-index: 5;               /* контент точно поверх частиц */
     }
 
     /* Шапка с градиентом */
@@ -233,6 +249,10 @@
   </style>
 </head>
 <body>
+
+<!-- КОНТЕЙНЕР ДЛЯ ПАУТИНКИ (ЧАСТИЦ) -->
+<div id="particles-js"></div>
+
 <div class="wrapper">
   <!-- Шапка -->
   <header class="header">
@@ -320,6 +340,171 @@
     ⚡ Нажмите на заголовок, чтобы раскрыть раздел
   </div>
 </div>
+
+<!-- Подключаем библиотеку particles.js для создания фона из частиц в виде паутинки атомов -->
+<script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+
+<!-- Инициализация паутинки в цветах сайта -->
+<script>
+  (function() {
+    // Ждём загрузки библиотеки и DOM
+    if (typeof particlesJS === 'undefined') {
+      console.warn('particles.js не загружен. Паутинка не появится.');
+      return;
+    }
+
+    // Конфигурация, стилизованная под фиолетово‑сиреневую гамму сайта
+    const particlesConfig = {
+      "particles": {
+        "number": {
+          "value": 70,                // не слишком густо, но заметно
+          "density": {
+            "enable": true,
+            "value_area": 900
+          }
+        },
+        "color": {
+          "value": ["#d9b3ff", "#c08aff", "#b185db", "#ecd9ff"]  // мягкие оттенки из палитры
+        },
+        "shape": {
+          "type": "circle",
+          "stroke": {
+            "width": 0,
+            "color": "#000000"
+          }
+        },
+        "opacity": {
+          "value": 0.6,
+          "random": true,
+          "anim": {
+            "enable": true,
+            "speed": 0.8,
+            "opacity_min": 0.25,
+            "sync": false
+          }
+        },
+        "size": {
+          "value": 4.5,
+          "random": true,
+          "anim": {
+            "enable": true,
+            "speed": 2.5,
+            "size_min": 1.2,
+            "sync": false
+          }
+        },
+        "line_linked": {
+          "enable": true,
+          "distance": 160,
+          "color": "#b185db",         // тёплый фиолетовый
+          "opacity": 0.28,
+          "width": 1.4
+        },
+        "move": {
+          "enable": true,
+          "speed": 1.8,               // плавное движение
+          "direction": "none",
+          "random": true,
+          "straight": false,
+          "out_mode": "out",
+          "bounce": false,
+          "attract": {
+            "enable": true,
+            "rotateX": 800,
+            "rotateY": 1400
+          }
+        }
+      },
+      "interactivity": {
+        "detect_on": "canvas",
+        "events": {
+          "onhover": {
+            "enable": false,           // отключаем, чтобы не мешать наведению на спойлеры
+            "mode": "repulse"
+          },
+          "onclick": {
+            "enable": false,
+            "mode": "push"
+          },
+          "resize": true
+        },
+        "modes": {
+          "grab": {
+            "distance": 200,
+            "line_linked": {
+              "opacity": 0.5
+            }
+          },
+          "bubble": {
+            "distance": 250,
+            "size": 8,
+            "duration": 2,
+            "opacity": 0.6,
+            "speed": 3
+          },
+          "repulse": {
+            "distance": 150,
+            "duration": 0.4
+          },
+          "push": {
+            "particles_nb": 4
+          },
+          "remove": {
+            "particles_nb": 2
+          }
+        }
+      },
+      "retina_detect": true,
+      "background": {
+        "color": "transparent",       // прозрачный фон — просвечивает градиент body
+        "image": "",
+        "position": "50% 50%",
+        "repeat": "no-repeat",
+        "size": "cover"
+      }
+    };
+
+    // Запускаем particles.js
+    particlesJS('particles-js', particlesConfig);
+
+    // Небольшой штрих: подкрашиваем canvas в тон сайта (если нужно)
+    // (частицы и так цветные, просто убедимся, что canvas прозрачен)
+    const canvas = document.querySelector('#particles-js canvas');
+    if (canvas) {
+      canvas.style.display = 'block';
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.pointerEvents = 'none';
+    }
+  })();
+</script>
+
+<!-- Небольшой фикс для того, чтобы фон частиц точно был прозрачным -->
+<style>
+  /* Гарантируем, что canvas от particles.js прозрачный */
+  #particles-js canvas {
+    background: transparent !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 0;
+    pointer-events: none;
+  }
+  /* Чтобы body не перекрывал canvas по z-index (уже задано) */
+  body {
+    position: relative;
+    z-index: 1;
+  }
+  /* Слегка усиливаем читаемость на фоне паутинки */
+  .spoiler, .header {
+    transition: backdrop-filter 0.2s;
+  }
+</style>
 
 </body>
 </html>
