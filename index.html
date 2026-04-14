@@ -1,512 +1,884 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-  <title>Виртуальный кабинет физики</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-	
-	/* Контейнер для частиц — фона в виде паутинки атомов */
-    #particles-js {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;                /* позади всего контента */
-      pointer-events: auto;      /* чтобы клики проходили сквозь частицы */
-      background: transparent;   /* градиент body будет виден */
-    }
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Виртуальный кабинет физики</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-    body {
-      font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
-      background: linear-gradient(145deg, #f3e9ff 0%, #e1d0f5 100%);
-      min-height: 100vh;
-      padding: 20px 16px 40px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-	  position: relative;
-      z-index: 1;               /* чтобы body был над #particles-js, но контент выше */
-    }
+      /* Контейнер для частиц — фона в виде паутинки атомов */
+      #particles-js {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        /* позади всего контента */
+        pointer-events: auto;
+        /* чтобы клики проходили сквозь частицы */
+        background: transparent;
+        /* градиент body будет виден */
+      }
 
-    .wrapper {
-      max-width: 900px;
-      width: 100%;
-      margin: 0 auto;
-	  position: relative;
-      z-index: 5;               /* контент точно поверх частиц */
-    }
-
-    /* Шапка с градиентом */
-    .header {
-      background: linear-gradient(135deg, #4b1e6d, #7b2cbf, #9d4edd);
-      background-size: 200% 200%;
-      padding: 28px 20px;
-      border-radius: 40px 40px 40px 8px;
-      margin-bottom: 36px;
-      box-shadow: 0 12px 28px rgba(102, 16, 130, 0.25);
-      border: 1px solid rgba(255, 215, 255, 0.3);
-      text-align: center;
-      transition: box-shadow 0.2s;
-	  pointer-events: auto;
-    }
-
-    .header h1 {
-      color: #fff3fe;
-      font-weight: 700;
-      font-size: clamp(28px, 8vw, 48px);
-      letter-spacing: -0.01em;
-      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      word-break: break-word;
-    }
-
-    .header-sub {
-      color: #ecd9ff;
-      margin-top: 8px;
-      font-size: 1.1rem;
-      font-weight: 400;
-      opacity: 0.9;
-    }
-
-    /* Контейнер спойлеров (details) */
-    .accordion {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    /* Стилизация элемента details как спойлера */
-    .spoiler {
-      background: rgba(255, 245, 255, 0.7);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      border-radius: 28px;
-      box-shadow: 0 8px 18px rgba(75, 30, 110, 0.15);
-      border: 1px solid rgba(180, 130, 230, 0.4);
-      transition: box-shadow 0.25s ease;
-    }
-
-    .spoiler:hover {
-      box-shadow: 0 10px 24px rgba(120, 50, 170, 0.25);
-      border-color: #c08aff;
-    }
-
-    /* Заголовок спойлера — summary */
-    .spoiler summary {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: linear-gradient(105deg, #b185db, #a06cd5);
-      padding: 18px 24px;
-      border-radius: 28px;
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: #1a0a2e;
-      cursor: pointer;
-      transition: background 0.3s, border-radius 0.2s, box-shadow 0.2s;
-      box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.4), 0 4px 8px rgba(0, 0, 0, 0.05);
-      border: 1px solid #e6c8ff;
-      letter-spacing: -0.01em;
-      list-style: none; /* убираем стандартный треугольник */
-    }
-
-    .spoiler summary::-webkit-details-marker {
-      display: none; /* скрываем маркер в WebKit */
-    }
-
-    /* Собственная иконка-стрелка */
-    .spoiler summary .spoiler-icon {
-      font-size: 1.8rem;
-      line-height: 1;
-      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1);
-      color: #2d0f4a;
-      margin-left: 8px;
-      user-select: none;
-    }
-
-    /* При открытом спойлере меняем стили summary и поворачиваем стрелку */
-    .spoiler[open] summary {
-      border-radius: 28px 28px 22px 22px;
-      background: linear-gradient(105deg, #9d60d3, #8a4ec7);
-      box-shadow: inset 0 1px 3px #fff3, 0 6px 10px rgba(70, 20, 110, 0.2);
-    }
-
-    .spoiler[open] summary .spoiler-icon {
-      transform: rotate(180deg);
-    }
-
-    /* Анимация раскрытия контента (CSS-only) */
-    .spoiler-content {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.45s ease-in-out;
-      background: rgba(255, 240, 255, 0.5);
-      border-radius: 0 0 28px 28px;
-      color: #1e102b;
-    }
-
-    /* Когда details открыт, контенту задаётся достаточная высота */
-    .spoiler[open] .spoiler-content {
-      /* значение с запасом, чтобы вместить любой placeholder */
-      max-height: 600px; 
-    }
-
-    .spoiler-content-inner {
-      padding: 8px 26px 26px 26px;
-      font-size: 1.1rem;
-      line-height: 1.6;
-      border-top: 1px dashed #c6a0f0;
-    }
-
-    /* Плейсхолдер текст */
-    .spoiler-text {
-      background: rgba(210, 170, 250, 0.25);
-      padding: 16px 20px;
-      border-radius: 24px;
-      border-left: 6px solid #7b2cbf;
-      color: #1f0f30;
-      font-style: italic;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      box-shadow: inset 0 1px 4px #e1c4ff;
-    }
-
-    .spoiler-text p {
-      margin-bottom: 10px;
-    }
-
-    .spoiler-text p:last-child {
-      margin-bottom: 0;
-    }
-
-    /* Адаптивность */
-    @media (max-width: 600px) {
       body {
-        padding: 12px 10px 30px;
+        font-family: 'Segoe UI', 'Roboto', system-ui, sans-serif;
+        background: linear-gradient(145deg, #f3e9ff 0%, #e1d0f5 100%);
+        min-height: 100vh;
+        padding: 20px 16px 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 1;
+        /* чтобы body был над #particles-js, но контент выше */
       }
 
+      .wrapper {
+        max-width: 900px;
+        width: 100%;
+        margin: 0 auto;
+        position: relative;
+        z-index: 5;
+        /* контент точно поверх частиц */
+      }
+
+      /* Шапка с градиентом */
       .header {
-        padding: 22px 14px;
-        border-radius: 32px 32px 32px 6px;
-        margin-bottom: 24px;
+        background: linear-gradient(135deg, #4b1e6d, #7b2cbf, #9d4edd);
+        background-size: 200% 200%;
+        padding: 28px 20px;
+        border-radius: 40px 40px 40px 8px;
+        margin-bottom: 36px;
+        box-shadow: 0 12px 28px rgba(102, 16, 130, 0.25);
+        border: 1px solid rgba(255, 215, 255, 0.3);
+        text-align: center;
+        transition: box-shadow 0.2s;
+        pointer-events: auto;
       }
 
+      .header h1 {
+        color: #fff3fe;
+        font-weight: 700;
+        font-size: clamp(28px, 8vw, 48px);
+        letter-spacing: -0.01em;
+        text-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        word-break: break-word;
+      }
+
+      .header-sub {
+        color: #ecd9ff;
+        margin-top: 8px;
+        font-size: 1.1rem;
+        font-weight: 400;
+        opacity: 0.9;
+      }
+
+      /* Контейнер спойлеров (details) */
+      .accordion {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      /* Стилизация элемента details как спойлера */
+      .spoiler {
+        background: rgba(255, 245, 255, 0.7);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border-radius: 28px;
+        box-shadow: 0 8px 18px rgba(75, 30, 110, 0.15);
+        border: 1px solid rgba(180, 130, 230, 0.4);
+        transition: box-shadow 0.25s ease;
+      }
+
+      .spoiler:hover {
+        box-shadow: 0 10px 24px rgba(120, 50, 170, 0.25);
+        border-color: #c08aff;
+      }
+
+      /* Заголовок спойлера — summary */
       .spoiler summary {
-        padding: 16px 18px;
-        font-size: 1.3rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: linear-gradient(105deg, #b185db, #a06cd5);
+        padding: 18px 24px;
+        border-radius: 28px;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1a0a2e;
+        cursor: pointer;
+        transition: background 0.3s, border-radius 0.2s, box-shadow 0.2s;
+        box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.4), 0 4px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid #e6c8ff;
+        letter-spacing: -0.01em;
+        list-style: none;
+        /* убираем стандартный треугольник */
       }
 
+      .spoiler summary::-webkit-details-marker {
+        display: none;
+        /* скрываем маркер в WebKit */
+      }
+
+      /* Собственная иконка-стрелка */
       .spoiler summary .spoiler-icon {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
+        line-height: 1;
+        transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.4, 1);
+        color: #2d0f4a;
+        margin-left: 8px;
+        user-select: none;
+      }
+
+      /* При открытом спойлере меняем стили summary и поворачиваем стрелку */
+      .spoiler[open] summary {
+        border-radius: 28px 28px 22px 22px;
+        background: linear-gradient(105deg, #9d60d3, #8a4ec7);
+        box-shadow: inset 0 1px 3px #fff3, 0 6px 10px rgba(70, 20, 110, 0.2);
+      }
+
+      .spoiler[open] summary .spoiler-icon {
+        transform: rotate(180deg);
+      }
+
+      /* Анимация раскрытия контента (CSS-only) */
+      .spoiler-content {
+        display: grid;
+        grid-template-rows: 0fr;
+        overflow: hidden;
+        transition: grid-template-rows 0.45s ease-in-out;
+        background: rgba(255, 240, 255, 0.5);
+        border-radius: 0 0 28px 28px;
+        color: #1e102b;
+      }
+
+      /* Когда details открыт, контенту задаётся достаточная высота */
+      .spoiler[open] .spoiler-content {
+        grid-template-rows: 1fr;
       }
 
       .spoiler-content-inner {
-        padding: 8px 18px 22px 18px;
-        font-size: 1rem;
+        padding: 8px 26px 26px 26px;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        border-top: 1px dashed #c6a0f0;
       }
 
+      /* Плейсхолдер текст */
       .spoiler-text {
-        padding: 14px 16px;
+        background: rgba(210, 170, 250, 0.25);
+        padding: 16px 20px;
+        border-radius: 24px;
+        border-left: 6px solid #7b2cbf;
+        color: #1f0f30;
+        font-style: italic;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        box-shadow: inset 0 1px 4px #e1c4ff;
       }
-    }
 
-    @media (max-width: 380px) {
-      .spoiler summary {
-        font-size: 1.2rem;
-        padding: 14px 14px;
+      .spoiler-text p {
+        margin-bottom: 10px;
       }
-    }
 
-    /* Футер */
-    .footer-note {
-      margin-top: 42px;
-      text-align: center;
-      color: #4a266a;
-      opacity: 0.8;
-      font-size: 0.95rem;
-    }
+      .spoiler-text p:last-child {
+        margin-bottom: 0;
+      }
 
-    /* Убираем стандартный outline, добавляем свой для accessibility */
-    .spoiler summary:focus-visible {
-      outline: 3px solid #f0c4ff;
-      outline-offset: 2px;
-    }
-
-    /* Анимация появления */
-    .wrapper {
-      animation: fadeSlide 0.6s ease;
-    }
-
-    @keyframes fadeSlide {
-      0% { opacity: 0; transform: translateY(12px); }
-      100% { opacity: 1; transform: translateY(0); }
-    }
-  </style>
-</head>
-<body>
-
-<!-- КОНТЕЙНЕР ДЛЯ ПАУТИНКИ (ЧАСТИЦ) -->
-<div id="particles-js"></div>
-
-<div class="wrapper">
-  <!-- Шапка -->
-  <header class="header">
-    <h1>⚛️ Виртуальный кабинет физики</h1>
-	<div class="header-sub">Автор: Бардиловский Фёдор Владимирович</div>
-    <div class="header-sub">интерактивные материалы · эксперименты · теория</div>
-  </header>
-
-  <!-- Аккордеон на чистом HTML+CSS с использованием <details> -->
-  <div class="accordion">
-    
-    <!-- 1. Учебники по физике -->
-    <details class="spoiler">
-      <summary>
-        <span class="spoiler-title">📘 Учебники по физике</span>
-        <span class="spoiler-icon" aria-hidden="true">▼</span>
-      </summary>
-      <div class="spoiler-content">
-        <div class="spoiler-content-inner">
-          <div class="spoiler-text">
-            <p>📚 <strong>Placeholder: Учебники по физике</strong></p>
-            <p>Здесь будут размещены ссылки и описания основных учебников: от классического курса Ландау и Лифшица до современных пособий. Можно добавить интерактивное оглавление, рекомендации по классам и уровням подготовки.</p>
-            <p>🔹 Перышкин А.В. «Физика 7-9 класс»<br>🔹 Мякишев Г.Я. «Физика 10-11 класс»<br>🔹 Иродов И.Е. «Задачи по общей физике»</p>
-            <p style="margin-top: 8px; opacity: 0.8;">(Контент будет заменён на реальные материалы)</p>
-          </div>
-        </div>
-      </div>
-    </details>
-	
-	    <!-- 2. Виртуальная лаборатория -->
-    <details class="spoiler">
-      <summary>
-        <span class="spoiler-title">🔬 Виртуальная лаборатория</span>
-        <span class="spoiler-icon" aria-hidden="true">▼</span>
-      </summary>
-      <div class="spoiler-content">
-        <div class="spoiler-content-inner">
-          <div class="spoiler-text">
-            <p>🧪 <strong>Placeholder: Виртуальная лаборатория</strong></p>
-            <p>Интерактивные симуляции и эксперименты по механике, электричеству, оптике и квантовой физике. Планируется интеграция с PhET, Algodoo и собственными разработками.</p>
-            <p>✨ Примеры:<br>• Маятник Максвелла<br>• Опыт Юнга (интерференция)<br>• Закон Ома в виртуальной цепи</p>
-            <p style="margin-top: 8px; opacity: 0.8;">(Скоро здесь появятся ссылки и встроенные виджеты)</p>
-          </div>
-        </div>
-      </div>
-    </details>
-
-    <!-- 3. Методические разработки по физике -->
-    <details class="spoiler">
-      <summary>
-        <span class="spoiler-title">📝 Методические разработки по физике</span>
-        <span class="spoiler-icon" aria-hidden="true">▼</span>
-      </summary>
-      <div class="spoiler-content">
-        <div class="spoiler-content-inner">
-          <div class="spoiler-text">
-            <p>📌 <strong>Placeholder: Методические разработки</strong></p>
-            <p>Конспекты уроков, технологические карты, сценарии лабораторных работ, презентации и дидактические материалы для учителей физики.</p>
-            <p>Разделы:<br>▪️ 7 класс: введение в физику, строение вещества<br>▪️ 8 класс: тепловые явления, электричество<br>▪️ 9 класс: кинематика, динамика<br>▪️ 10-11 класс: углублённый курс</p>
-            <p style="margin-top: 8px; opacity: 0.8;">(Здесь будет файловое хранилище с возможностью скачивания)</p>
-          </div>
-        </div>
-      </div>
-    </details>
-
-    <!-- 4. Полезные интернет-ресурсы по физике -->
-    <details class="spoiler">
-      <summary>
-        <span class="spoiler-title">🌐 Полезные интернет-ресурсы по физике</span>
-        <span class="spoiler-icon" aria-hidden="true">▼</span>
-      </summary>
-      <div class="spoiler-content">
-        <div class="spoiler-content-inner">
-          <div class="spoiler-text">
-            <p>🔗 <strong>Placeholder: Полезные ссылки</strong></p>
-            <p>Коллекция проверенных сайтов, видеолекций, онлайн-калькуляторов и образовательных платформ по физике.</p>
-            <p>🌍 Примеры:<br>• Элементы большой науки (elementy.ru)<br>• ПостНаука (физика)<br>• Канал «Физика от Побединского»<br>• PhET Colorado (интерактивные симуляции)<br>• Российская электронная школа (РЭШ)</p>
-            <p style="margin-top: 8px; opacity: 0.8;">(Будет пополняться и обновляться)</p>
-          </div>
-        </div>
-      </div>
-    </details>
-  </div>
-
-  <div class="footer-note">
-    ⚡ Нажмите на заголовок, чтобы раскрыть раздел
-  </div>
-</div>
-
-<!-- Подключаем библиотеку particles.js для создания фона из частиц в виде паутинки атомов -->
-<script src="particles.min.js"></script>
-
-<!-- Инициализация паутинки в цветах сайта -->
-<script>
-  (function() {
-    // Ждём загрузки библиотеки и DOM
-    if (typeof particlesJS === 'undefined') {
-      console.warn('particles.js не загружен. Паутинка не появится.');
-      return;
-    }
-
-    // Конфигурация, стилизованная под фиолетово‑сиреневую гамму сайта
-    const particlesConfig = {
-      "particles": {
-        "number": {
-          "value": 100,                // не слишком густо, но заметно
-          "density": {
-            "enable": true,
-            "value_area": 900
-          }
-        },
-        "color": {
-          "value": ["#d9b3ff", "#c08aff", "#b185db", "#ecd9ff"]  // мягкие оттенки из палитры
-        },
-        "shape": {
-          "type": "circle",
-          "stroke": {
-            "width": 0,
-            "color": "#000000"
-          }
-        },
-        "opacity": {
-          "value": 0.6,
-          "random": true,
-          "anim": {
-            "enable": true,
-            "speed": 0.8,
-            "opacity_min": 0.25,
-            "sync": false
-          }
-        },
-        "size": {
-          "value": 4.5,
-          "random": true,
-          "anim": {
-            "enable": true,
-            "speed": 2.5,
-            "size_min": 1.2,
-            "sync": false
-          }
-        },
-        "line_linked": {
-          "enable": true,
-          "distance": 160,
-          "color": "#b185db",         // тёплый фиолетовый
-          "opacity": 0.28,
-          "width": 1.4
-        },
-        "move": {
-          "enable": true,
-          "speed": 1.8,               // плавное движение
-          "direction": "none",
-          "random": true,
-          "straight": false,
-          "out_mode": "out",
-          "bounce": false,
-          "attract": {
-            "enable": true,
-            "rotateX": 800,
-            "rotateY": 1400
-          }
+      /* Адаптивность */
+      @media (max-width: 600px) {
+        body {
+          padding: 12px 10px 30px;
         }
-      },
-      "interactivity": {
-        "detect_on": "canvas",
-        "events": {
-          "onhover": {
-            "enable": true,           // включаем реакцию на мышь
-            "mode": "grab"            // линии тянутся к курсору (мягкий эффект)
-          },
-          "onclick": {
-            "enable": false,          // оставляем выключенным, чтобы не мешать кликам по спойлерам
-            "mode": "push"
-          },
-          "resize": true
-        },
-        "modes": {
-          "grab": {
-            "distance": 200,
+
+        .header {
+          padding: 22px 14px;
+          border-radius: 32px 32px 32px 6px;
+          margin-bottom: 24px;
+        }
+
+        .spoiler summary {
+          padding: 16px 18px;
+          font-size: 1.3rem;
+        }
+
+        .spoiler summary .spoiler-icon {
+          font-size: 1.6rem;
+        }
+
+        .spoiler-content-inner {
+          padding: 8px 18px 22px 18px;
+          font-size: 1rem;
+        }
+
+        .spoiler-text {
+          padding: 14px 16px;
+        }
+      }
+
+      @media (max-width: 380px) {
+        .spoiler summary {
+          font-size: 1.2rem;
+          padding: 14px 14px;
+        }
+      }
+
+      /* Футер */
+      .footer-note {
+        margin-top: 42px;
+        text-align: center;
+        color: #4a266a;
+        opacity: 0.8;
+        font-size: 0.95rem;
+      }
+
+      /* Убираем стандартный outline, добавляем свой для accessibility */
+      .spoiler summary:focus-visible {
+        outline: 3px solid #f0c4ff;
+        outline-offset: 2px;
+      }
+
+      /* Анимация появления */
+      .wrapper {
+        animation: fadeSlide 0.6s ease;
+      }
+
+      @keyframes fadeSlide {
+        0% {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+
+        100% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- КОНТЕЙНЕР ДЛЯ ПАУТИНКИ (ЧАСТИЦ) -->
+    <div id="particles-js"></div>
+    <div class="wrapper">
+      <!-- Шапка -->
+      <header class="header">
+        <h1>⚛️ Виртуальный кабинет физики</h1>
+        <div class="header-sub">Автор: Бардиловский Фёдор Владимирович</div>
+        <div class="header-sub">интерактивные материалы · эксперименты · теория</div>
+      </header>
+      <!-- Аккордеон на чистом HTML+CSS с использованием <details> -->
+      <div class="accordion">
+        <!-- Цели и задачи работы кабинета -->
+        <details class="spoiler">
+          <summary>
+            <span class="spoiler-title">☑️ Цели и задачи работы кабинета</span>
+            <span class="spoiler-icon" aria-hidden="true">▼</span>
+          </summary>
+          <div class="spoiler-content">
+            <div class="spoiler-content-inner">
+              <div class="spoiler-text">
+                <p style="text-align: center;">
+                  <img src="img/logo.jpg" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" alt="Логотип">
+                </p>
+                <p>✅ <strong>Цели и задачи работы кабинета:</strong>
+                </p>
+                <p>
+                  <strong>
+                    <strong>&bull;&nbsp;</strong>&nbsp; &nbsp; мотивирование обучения и стимулирование деятельности учащихся в рамках учебного предмета физика; <br />
+                    <strong>&bull;&nbsp;</strong>&nbsp; &nbsp; развитие любознательности у учащихся и познавательного интереса к физике; <br />
+                    <strong>&bull;&nbsp;</strong>&nbsp; &nbsp; углубление знаний по физике. </strong>
+                  <br /> &nbsp;
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
+        <!-- Учебники по физике -->
+        <details class="spoiler">
+          <summary>
+            <span class="spoiler-title">📘 Учебники по физике</span>
+            <span class="spoiler-icon" aria-hidden="true">▼</span>
+          </summary>
+          <div class="spoiler-content">
+            <div class="spoiler-content-inner">
+              <div class="spoiler-text">
+                <p>📚 <strong>Учебники по физике</strong>
+                </p>
+                <p>Данные материалы размещены в некоммерческих целях только для ознакомления.</p>
+                <p>Правообладатель: Издательское республиканское унитарное предприятие &laquo;Народная асвета&raquo;.</p>
+                <p></p>
+                <p>
+                  <strong>
+                    <span style="font-size: 1.2em;">Нажмите на обложку нужного вам учебника ниже, чтобы его скачать:</span>
+                  </strong>
+                </p>
+                <table>
+                  <tbody>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/DrOSYIg7qQ3wMA" target="_blank">
+                            <img src="img/books/fizika_7kl_bel_isachenkava_2017.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Аўтары: Ісачанкава Л.А., Ляшчынскі Ю.Д.</p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/-Z0c4QH9ze9z_g" target="_blank">
+                            <img src="img/books/fizika_7kl_rus_isachenkova_2017.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Авторы: Исаченкова Л.А., Лещинский Ю.Д.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/NUNpTiGVXx9S9g" target="_blank">
+                            <img src="img/books/fizika_8kl_bel_isachankava_2018.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Аўтары: Ісачанкава Л.А., Ляшчынскі Ю.Д., Дарафейчык У.У.</p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/LHWIlk97ulKANQ" target="_blank">
+                            <img src="img/books/fizika_8kl_rus_isachenkova_2018.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Авторы: Исаченкова Л.А., Лещинский Ю.Д., Дорофейчик В.В.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/wxXMWEM7qJ_s8A" target="_blank">
+                            <img src="img/books/fizika_9kl_bel_isachenkova_2019.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Аўтары: Ісачанкава Л.А., Сакольскі А.А., Захарэвіч К.В.</p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/ZgESj1gK3ifG9g" target="_blank">
+                            <img src="img/books/fizika_9kl_rus_isachenkova_2019.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Авторы: Исаченкова Л.А., Сокольский А.А., Захаревич Е.В.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/lBoDQCj-J078zA" target="_blank">
+                            <img src="img/books/fizika_10kl_bel_gromika_2020.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Аўтары: Грамыка А.У., Зяньковіч У.І., Луцэвіч А.А., Слесар І.Э.</p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/QZO1mXYEEFHnuA" target="_blank">
+                            <img src="img/books/fizika_10kl_rus_gromika_2019.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Авторы: Громыко Е.В., Зенькович В.И., Луцевич А.А., Слесарь И.Э.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/TqOFaTIRjj5OdQ" target="_blank">
+                            <img src="img/books/fizika_11kl_bel_zhilko_2014.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Аўтары: Жылко В.У., Марковіч Л.Р.</p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p>
+                          <a href="https://disk.yandex.ru/i/jXbFwcEfeHjmOw" target="_blank">
+                            <img src="img/books/fizika_11kl_rus_zhilko_2014.jpg" alt="" vspace="" align="" hspace="" width="220" height="286" />
+                          </a>
+                        </p>
+                        <p>Авторы: Жилко В.В., Маркович Л.Г.</p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                      <td style="text-align: center;">
+                        <p></p>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p></p>
+              </div>
+            </div>
+          </div>
+        </details>
+        <!-- Виртуальная лаборатория -->
+        <details class="spoiler">
+          <summary>
+            <span class="spoiler-title">🔬 Виртуальная лаборатория</span>
+            <span class="spoiler-icon" aria-hidden="true">▼</span>
+          </summary>
+          <div class="spoiler-content">
+            <div class="spoiler-content-inner">
+              <div class="spoiler-text">
+                <p>🧪 <strong>Виртуальная лаборатория</strong>
+                </p>
+                <p style="text-align: center;">
+                  <img src="img/Naglyadnaya_fizika.png" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" alt="Логотип">
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">
+                    <strong>Базовая школа</strong>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">&nbsp; &nbsp; <strong>&bull;</strong>
+                    <strong>&nbsp; <a href="http://infotriumf.by/fizika-predmet/naglyadnaya-fizika-vvedenie" target="_blank">
+                        <span style="color: #000000;">7 класс. Наглядная физика. Введение.</span>
+                      </a>
+                    </strong>
+                    <a href="http://infotriumf.by/fizika-predmet/naglyadnaya-fizika-vvedenie" target="_blank">
+                      <span style="color: #000000;">&nbsp; (Сссылка на оф. сайт)</span>
+                    </a>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">&nbsp; &nbsp; <strong>&bull;&nbsp; <a href="http://infotriumf.by/fizika-predmet/naglyadnaya-fizika-chast-i" target="_blank">
+                        <span style="color: #000000;">8 класс. Наглядная физика. Часть I</span>
+                      </a>
+                    </strong>
+                    <a href="http://infotriumf.by/fizika-predmet/naglyadnaya-fizika-chast-i" target="_blank">
+                      <span style="color: #000000;"> (Сссылка на оф. сайт)</span>
+                    </a>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">&nbsp; &nbsp; <strong>&bull;&nbsp; <a href="http://infotriumf.by/fizika-predmet/naglyadnaya-fizika-chast-ii" target="_blank">
+                        <span style="color: #000000;">9 класс. Наглядная физика. Часть II</span>
+                      </a>
+                    </strong>
+                    <a href="http://infotriumf.by/fizika-predmet/naglyadnaya-fizika-chast-ii" target="_blank">
+                      <span style="color: #000000;"> (Сссылка на оф. сайт)</span>
+                    </a>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">&nbsp; &nbsp; <strong>&bull;&nbsp; <a href="http://infotriumf.by/produkty" target="_blank">
+                        <span style="color: #000000;">9 класс. Наглядная физика. Десятибалльный мониторинг</span>
+                      </a>
+                    </strong>
+                    <a href="http://infotriumf.by/produkty" target="_blank">
+                      <span style="color: #000000;">&nbsp; (Сссылка на оф. сайт)</span>
+                    </a>
+                  </span>
+                </p>
+                <p>Данные материалы доступны для ознакомления в кабинете информатики.</p>
+                <p>Правообладатель: Научно-производственное частное унитарное предприятие &laquo;ИНФОТРИУМФ&raquo;.</p>
+                <p>&nbsp; &nbsp;</p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">
+                    <strong>Средняя школа</strong>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">&nbsp; &nbsp; <span style="color: #000000;">
+                      <strong>&bull;</strong>
+                    </span>
+                    <span style="color: #000000;">
+                      <strong></strong>
+                    </span>
+                    <a href="https://disk.yandex.ru/d/3XwLv417ocXPBQ" target="_blank">
+                      <span style="color: #000000;">
+                        <strong>10 класс. ЭСО Физика. Электричество</strong>&nbsp; (Скачать) </span>
+                    </a>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">&nbsp; &nbsp; <span style="color: #000000;">
+                      <strong>&bull; </strong>
+                    </span>
+                    <a href="https://disk.yandex.ru/d/KgEGv0t08-fVhg" target="_blank">
+                      <span style="color: #000000;">
+                        <strong>11 класс. ЭСО Физика. Волновая оптика</strong>&nbsp; (Скачать) </span>
+                    </a>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">&nbsp; &nbsp; <span style="color: #000000;">
+                      <strong>&bull; </strong>
+                    </span>
+                    <a href="https://disk.yandex.ru/d/gg06uiuhRp8X7g" target="_blank">
+                      <span style="color: #000000;">
+                        <strong>11 класс. ЭСО Физика. Квантовая физика</strong>&nbsp; (Скачать) </span>
+                    </a>
+                  </span>
+                </p>
+                <p></p>
+                <p>Данные материалы размещены в некоммерческих целях только для ознакомления.</p>
+                <p>Правообладатель: Учреждение &laquo;Главный информационно-аналитический центр Министерства образования Республики Беларусь&raquo;.</p>
+                <p>&nbsp; &nbsp;</p>
+              </div>
+            </div>
+          </div>
+        </details>
+        <!-- Методические разработки по физике -->
+        <details class="spoiler">
+          <summary>
+            <span class="spoiler-title">📝 Методические разработки по физике</span>
+            <span class="spoiler-icon" aria-hidden="true">▼</span>
+          </summary>
+          <div class="spoiler-content">
+            <div class="spoiler-content-inner">
+              <div class="spoiler-text">
+                <p>📌 <strong>Методические разработки</strong></p>
+                <p>&nbsp;</p>
+				<hr />
+                <p>
+                  <span style="color: #000000;">
+                    <a href="https://disk.yandex.ru/d/HhUVj-ht6urlCg" target="_blank">
+                      <span style="font-size: 1.2em; color: #000000;">
+                        <strong>Набор тестов по физике для тестовой системы 10 бального мониторинга </strong>(Скачать) </span>
+                    </a>
+                  </span>
+                </p>
+                <p>&nbsp;</p>
+				<hr />
+                <p>
+                  <span style="font-size: 1.2em;">
+                    <strong>Набор презентаций и методических разработок для проведения уроков по физике:</strong>
+                  </span>
+                </p>
+                <p>
+                  <span style="font-size: 1.2em;">
+                    <strong>&nbsp; &nbsp; &bull; <a href="https://disk.yandex.ru/d/ce-dVJcPVwIvBQ" target="_blank">
+                        <span style="color: #000000;">
+                          <span style="color: #000000;">для 7 класса&nbsp;</span>
+                        </span>
+                      </a>
+                    </strong>
+                    <a href="https://disk.yandex.ru/d/ce-dVJcPVwIvBQ" target="_blank">
+                      <span style="color: #000000;">
+                        <span style="color: #000000;">(Скачать)</span>
+                      </span>
+                    </a>
+                    <strong>
+                      <br />&nbsp; &nbsp; &bull; <a href="https://disk.yandex.ru/d/kwOQWs1vAch7hg" target="_blank">
+                        <span style="color: #000000;">
+                          <span style="color: #000000;">для 8 класса&nbsp;</span>
+                        </span>
+                      </a>
+                    </strong>
+                    <a href="https://disk.yandex.ru/d/kwOQWs1vAch7hg" target="_blank">
+                      <span style="color: #000000;">
+                        <span style="color: #000000;">(Скачать)</span>
+                      </span>
+                    </a>
+                    <strong>
+                      <br />&nbsp; &nbsp; &bull; <a href="https://disk.yandex.ru/d/KNKkYZtz8ClBMw" target="_blank">
+                        <span style="color: #000000;">
+                          <span style="color: #000000;">для 9 класса&nbsp;</span>
+                        </span>
+                      </a>
+                    </strong>
+                    <a href="https://disk.yandex.ru/d/KNKkYZtz8ClBMw" target="_blank">
+                      <span style="color: #000000;">
+                        <span style="color: #000000;">(Скачать)</span>
+                      </span>
+                    </a>
+                    <strong>
+                      <br />&nbsp; &nbsp; &bull; <a href="https://disk.yandex.ru/d/600aNlfd7tekuw" target="_blank">
+                        <span style="color: #000000;">
+                          <span style="color: #000000;">для 10 класса&nbsp;</span>
+                        </span>
+                      </a>
+                    </strong>
+                    <a href="https://disk.yandex.ru/d/600aNlfd7tekuw" target="_blank">
+                      <span style="color: #000000;">
+                        <span style="color: #000000;">(Скачать)</span>
+                      </span>
+                    </a>
+                    <strong>
+                      <br />&nbsp; &nbsp; &bull; <a href="https://disk.yandex.ru/d/ew9MoWRIc2lF1g" target="_blank">
+                        <span style="color: #000000;">
+                          <span style="color: #000000;">для 11 класса&nbsp;</span>
+                        </span>
+                      </a>
+                    </strong>
+                    <a href="https://disk.yandex.ru/d/ew9MoWRIc2lF1g" target="_blank"><span style="color: #000000;">(Скачать)</span></a>
+                  </span>
+                </p>
+                <p></p>
+              </div>
+            </div>
+          </div>
+        </details>
+        <!-- Полезные интернет-ресурсы по физике -->
+        <details class="spoiler">
+          <summary>
+            <span class="spoiler-title">🌐 Полезные интернет-ресурсы по физике</span>
+            <span class="spoiler-icon" aria-hidden="true">▼</span>
+          </summary>
+          <div class="spoiler-content">
+            <div class="spoiler-content-inner">
+              <div class="spoiler-text">
+                <p>🔗 <strong>Полезные ссылки</strong></p>
+				<p>&nbsp;</p>
+                <hr />
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">
+                    <strong>Ресурсы преподавателя лицея БРУ Плетнёва Александра Эдуардовича:</strong>
+                  </span>
+                </p>
+                <p>
+				<span style="font-size: 1.2em; color: #000000;">
+                  &bull;&nbsp;<a href="https://www.youtube.com/channel/UCo0xDXv-GUpQb-ivUSwWwxg" target="_blank"><span style="color: #000000;">Видеоуроки по Физике</span></a><br />
+                  &bull;&nbsp;<a href="http://www.ufclub.bru.by/" target="_blank"><span style="color: #000000;">Клуб юных физиков лицея БРУ</span></a>
+                </span>
+				</p>
+				<p>&nbsp;</p>
+                <hr />
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">
+                    <strong>Ресурсы преподавателя МГОЛ №1 Грабцевича Владимира Ивановича:</strong>
+                  </span>
+                </p>
+                <p>
+				<span style="font-size: 1.2em; color: #000000;">
+                  &bull;&nbsp;<a href="https://firstlyceum.by/node/442" target="_blank"><span style="color: #000000;">Физика лицеисту. 9-11 классы</span></a><br />
+                  &bull;&nbsp;<a href="http://fizportal.ru/" target="_blank"><span style="color: #000000;">Физический портал для школьников и абитуриентов</span></a><br />
+                  &bull;&nbsp;<a href="https://firstlyceum.by/resource-center" target="_blank"><span style="color: #000000;">Ресурсный центр УО &laquo;&lrm;МГОЛ №1&raquo;</span></a><br />
+				</span>
+                </p>
+
+				<p>&nbsp;</p>
+                <hr />
+                <p>
+                  <span style="font-size: 1.2em; color: #000000;">
+                    <strong>Материалы отдела физико-математических и естественнонаучных дисциплин МГОИРО:</strong>
+                  </span>
+                </p>
+                <p>
+				<span style="font-size: 1.2em; color: #000000;">
+                  &bull;&nbsp;<a href="https://drive.google.com/drive/folders/1JCFeI2d_yaOTv3JpLMEDmoXvectk0tUa" target="_blank"><span style="color: #000000;">В помощь учителю физики</span>		
+				</span>
+                </p>
+				
+              </div>
+            </div>
+          </div>
+        </details>
+		
+      </div>
+      <div class="footer-note"> ⚡ Нажмите на заголовок, чтобы раскрыть раздел </div>
+    </div>
+    <!-- Подключаем библиотеку particles.js для создания фона из частиц в виде паутинки атомов -->
+    <script src="particles.min.js"></script>
+    <!-- Инициализация паутинки в цветах сайта -->
+    <script>
+      (function() {
+        // Ждём загрузки библиотеки и DOM
+        if (typeof particlesJS === 'undefined') {
+          console.warn('particles.js не загружен. Паутинка не появится.');
+          return;
+        }
+        // Конфигурация, стилизованная под фиолетово‑сиреневую гамму сайта
+        const particlesConfig = {
+          "particles": {
+            "number": {
+              "value": 100, // не слишком густо, но заметно
+              "density": {
+                "enable": true,
+                "value_area": 900
+              }
+            },
+            "color": {
+              "value": ["#d9b3ff", "#c08aff", "#b185db", "#ecd9ff"] // мягкие оттенки из палитры
+            },
+            "shape": {
+              "type": "circle",
+              "stroke": {
+                "width": 0,
+                "color": "#000000"
+              }
+            },
+            "opacity": {
+              "value": 0.6,
+              "random": true,
+              "anim": {
+                "enable": true,
+                "speed": 0.8,
+                "opacity_min": 0.25,
+                "sync": false
+              }
+            },
+            "size": {
+              "value": 4.5,
+              "random": true,
+              "anim": {
+                "enable": true,
+                "speed": 2.5,
+                "size_min": 1.2,
+                "sync": false
+              }
+            },
             "line_linked": {
-              "opacity": 0.6          // линии становятся ярче при наведении
+              "enable": true,
+              "distance": 160,
+              "color": "#b185db", // тёплый фиолетовый
+              "opacity": 0.28,
+              "width": 1.4
+            },
+            "move": {
+              "enable": true,
+              "speed": 1.8, // плавное движение
+              "direction": "none",
+              "random": true,
+              "straight": false,
+              "out_mode": "out",
+              "bounce": false,
+              "attract": {
+                "enable": true,
+                "rotateX": 800,
+                "rotateY": 1400
+              }
             }
           },
-          "bubble": {
-            "distance": 250,
-            "size": 8,
-            "duration": 2,
-            "opacity": 0.6,
-            "speed": 3
+          "interactivity": {
+            "detect_on": "canvas",
+            "events": {
+              "onhover": {
+                "enable": true, // включаем реакцию на мышь
+                "mode": "grab" // линии тянутся к курсору (мягкий эффект)
+              },
+              "onclick": {
+                "enable": false, // оставляем выключенным, чтобы не мешать кликам по спойлерам
+                "mode": "push"
+              },
+              "resize": true
+            },
+            "modes": {
+              "grab": {
+                "distance": 200,
+                "line_linked": {
+                  "opacity": 0.6 // линии становятся ярче при наведении
+                }
+              },
+              "bubble": {
+                "distance": 250,
+                "size": 8,
+                "duration": 2,
+                "opacity": 0.6,
+                "speed": 3
+              },
+              "repulse": {
+                "distance": 150,
+                "duration": 0.4
+              },
+              "push": {
+                "particles_nb": 4
+              },
+              "remove": {
+                "particles_nb": 2
+              }
+            }
           },
-          "repulse": {
-            "distance": 150,
-            "duration": 0.4
-          },
-          "push": {
-            "particles_nb": 4
-          },
-          "remove": {
-            "particles_nb": 2
+          "retina_detect": true,
+          "background": {
+            "color": "transparent", // прозрачный фон — просвечивает градиент body
+            "image": "",
+            "position": "50% 50%",
+            "repeat": "no-repeat",
+            "size": "cover"
           }
+        };
+        // Запускаем particles.js
+        particlesJS('particles-js', particlesConfig);
+        // Небольшой штрих: подкрашиваем canvas в тон сайта (если нужно)
+        // (частицы и так цветные, просто убедимся, что canvas прозрачен)
+        const canvas = document.querySelector('#particles-js canvas');
+        if (canvas) {
+          canvas.style.display = 'block';
+          canvas.style.position = 'fixed';
+          canvas.style.top = '0';
+          canvas.style.left = '0';
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
+          canvas.style.pointerEvents = 'auto';
         }
-      },
-      "retina_detect": true,
-      "background": {
-        "color": "transparent",       // прозрачный фон — просвечивает градиент body
-        "image": "",
-        "position": "50% 50%",
-        "repeat": "no-repeat",
-        "size": "cover"
+      })();
+    </script>
+    <!-- Небольшой фикс для того, чтобы фон частиц точно был прозрачным -->
+    <style>
+      /* Гарантируем, что canvas от particles.js прозрачный */
+      #particles-js canvas {
+        background: transparent !important;
+        position: fixed;
+        top: 0;
+        top: 0;
+        left: 0;
+        width: 100% !important;
+        height: 100% !important;
+        z-index: 0;
+        pointer-events: auto;
       }
-    };
 
-    // Запускаем particles.js
-    particlesJS('particles-js', particlesConfig);
+      /* Чтобы body не перекрывал canvas по z-index (уже задано) */
+      body {
+        position: relative;
+        z-index: 1;
+      }
 
-    // Небольшой штрих: подкрашиваем canvas в тон сайта (если нужно)
-    // (частицы и так цветные, просто убедимся, что canvas прозрачен)
-    const canvas = document.querySelector('#particles-js canvas');
-    if (canvas) {
-      canvas.style.display = 'block';
-      canvas.style.position = 'fixed';
-      canvas.style.top = '0';
-      canvas.style.left = '0';
-      canvas.style.width = '100%';
-      canvas.style.height = '100%';
-      canvas.style.pointerEvents = 'auto';
-    }
-  })();
-</script>
-
-<!-- Небольшой фикс для того, чтобы фон частиц точно был прозрачным -->
-<style>
-  /* Гарантируем, что canvas от particles.js прозрачный */
-  #particles-js canvas {
-    background: transparent !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-    z-index: 0;
-    pointer-events: auto;
-  }
-  /* Чтобы body не перекрывал canvas по z-index (уже задано) */
-  body {
-    position: relative;
-    z-index: 1;
-  }
-  /* Слегка усиливаем читаемость на фоне паутинки */
-  .spoiler, .header {
-    transition: backdrop-filter 0.2s;
-  }
-</style>
-
-</body>
+      /* Слегка усиливаем читаемость на фоне паутинки */
+      .spoiler,
+      .header {
+        transition: backdrop-filter 0.2s;
+      }
+    </style>
+  </body>
 </html>
